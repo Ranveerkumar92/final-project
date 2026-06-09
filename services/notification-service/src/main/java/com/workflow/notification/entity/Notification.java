@@ -1,35 +1,47 @@
 package com.workflow.notification.entity;
 
+import com.workflow.notification.dto.NotificationStatus;
+import com.workflow.notification.dto.NotificationType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
-@Entity
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Entity
 @Table(name = "notifications")
 public class Notification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String recipientId;
-    private String subject;
-    private String message;
-    private String type; // EMAIL, SMS, IN_APP
-    private String status; // PENDING, SENT, FAILED
-    private LocalDateTime createdDate;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NotificationType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NotificationStatus status;
+
     private LocalDateTime sentDate;
+
     private String errorDetails;
 
+    private String recipientId;
+
+    private String subject;
+
+    private String message;
+
+
+
     @PrePersist
-    protected void onCreate() {
-        createdDate = LocalDateTime.now();
-        status = "PENDING";
+    public void prePersist() {
+        if (status == null) {
+            status = NotificationStatus.PENDING;
+        }
     }
 }
+

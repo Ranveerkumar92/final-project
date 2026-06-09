@@ -1,5 +1,6 @@
 package com.workflow.approval.entity;
 
+import com.workflow.approval.dto.ApprovalStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +21,7 @@ public class Approval {
 
     private Long workflowInstanceId;
     private String approver;
-    private String status; // PENDING, APPROVED, REJECTED
+    private ApprovalStatus status;
     private String comments;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
@@ -30,6 +31,6 @@ public class Approval {
     protected void onCreate() {
         createdDate = LocalDateTime.now();
         updatedDate = LocalDateTime.now();
-        status = "PENDING";
+        status = ApprovalStatus.PENDING; // Default status
     }
 }

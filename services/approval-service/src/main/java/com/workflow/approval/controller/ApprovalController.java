@@ -5,6 +5,8 @@ import com.workflow.approval.dto.ApprovalDTO;
 import com.workflow.approval.service.ApprovalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,13 +24,13 @@ public class ApprovalController {
 
     private final ApprovalService approvalService;
 
-    @PostMapping("/submit")
+    @PostMapping
     @Operation(summary = "Submit an approval decision")
     public ResponseEntity<ApiResponse<ApprovalDTO>> submitApproval(
-            @RequestBody ApprovalDTO dto,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            @Valid @RequestBody ApprovalDTO dto,
+            @RequestHeader("X-User-Id") @NotBlank String userId) {
         log.info("Submitting approval");
-        ApprovalDTO submitted = approvalService.submitApproval(dto, userId != null ? userId : "system");
+        ApprovalDTO submitted = approvalService.submitApproval(dto, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(submitted, "Approval submitted successfully"));
     }
@@ -44,9 +46,9 @@ public class ApprovalController {
     @GetMapping("/pending")
     @Operation(summary = "Get pending approvals for current user")
     public ResponseEntity<ApiResponse<List<ApprovalDTO>>> getPendingApprovals(
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            @RequestHeader(value = "X-User-Id", required = true) String userId) {
         log.info("Fetching pending approvals for user: {}", userId);
-        List<ApprovalDTO> approvals = approvalService.getPendingApprovalsForUser(userId != null ? userId : "system");
+        List<ApprovalDTO> approvals = approvalService.getPendingApprovalsForUser(userId);
         return ResponseEntity.ok(ApiResponse.success(approvals, "Pending approvals retrieved successfully"));
     }
 
