@@ -1,0 +1,186 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: workflow-postgres
+    environment:
+      POSTGRES_USER: workflow_user
+      POSTGRES_PASSWORD: workflow_password
+      POSTGRES_DB: workflow_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - workflow-network
+
+  # Kafka Broker
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: workflow-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    ports:
+      - "9092:9092"
+    networks:
+      - workflow-network
+
+  # Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: workflow-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_INIT_LIMIT: 5
+    ports:
+      - "2181:2181"
+    networks:
+      - workflow-network
+
+  # Workflow Service
+  workflow-service:
+    build:
+      context: ./services/workflow-service
+      dockerfile: ../../docker/Dockerfile.workflow
+    container_name: workflow-service
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/workflow_db
+      SPRING_DATASOURCE_USERNAME: workflow_user
+      SPRING_DATASOURCE_PASSWORD: workflow_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8001:8001"
+    networks:
+      - workflow-network
+    restart: unless-stopped
+
+  # Approval Service
+  approval-service:
+    build:
+      context: ./services/approval-service
+      dockerfile: ../../docker/Dockerfile.approval
+    container_name: approval-service
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/approval_db
+      SPRING_DATASOURCE_USERNAME: workflow_user
+      SPRING_DATASOURCE_PASSWORD: workflow_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8002:8002"
+    networks:
+      - workflow-network
+    restart: unless-stopped
+
+  # Task Service
+  task-service:
+    build:
+      context: ./services/task-service
+      dockerfile: ../../docker/Dockerfile.task
+    container_name: task-service
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/task_db
+      SPRING_DATASOURCE_USERNAME: workflow_user
+      SPRING_DATASOURCE_PASSWORD: workflow_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8003:8003"
+    networks:
+      - workflow-network
+    restart: unless-stopped
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: ../../docker/Dockerfile.notification
+    container_name: notification-service
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
+      SPRING_DATASOURCE_USERNAME: workflow_user
+      SPRING_DATASOURCE_PASSWORD: workflow_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+    ports:
+      - "8004:8004"
+    networks:
+      - workflow-network
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: ../../docker/Dockerfile.gateway
+    container_name: api-gateway
+    depends_on:
+      - workflow-service
+      - approval-service
+      - task-service
+      - notification-service
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8000:8000"
+    networks:
+      - workflow-network
+    restart: unless-stopped
+
+  # Prometheus (Monitoring)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: workflow-prometheus
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - workflow-network
+
+  # Grafana (Visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: workflow-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - workflow-network
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  workflow-network:
+    driver: bridge
