@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'workflow-service'
+    static_configs:
+      - targets: ['workflow-service:8001']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'approval-service'
+    static_configs:
+      - targets: ['approval-service:8002']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'task-service'
+    static_configs:
+      - targets: ['task-service:8003']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:8004']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8000']
+    metrics_path: '/actuator/prometheus'

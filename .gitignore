@@ -1,0 +1,90 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.flattened-pom.xml
+*.odx.xml
+*.RestClientOperations
+_NCrunch_*
+*.mm.*
+AutoTest.config
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+*.suo
+*.sln.iml
+
+# Gradle
+.gradle
+**/build/
+gradle-app.setting
+.gradletasknamecache
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+.project
+.settings/
+.classpath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (if using frontend)
+node_modules/
+dist/
+build/
+
+# Python (for scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+
+# Kubernetes
+secrets/
+*.pem
+*.key
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# SSH keys
+id_rsa
+id_rsa.pub
+known_hosts
+
+# JWT and sensitive data
+jwt_secret
+jwt_public_key
