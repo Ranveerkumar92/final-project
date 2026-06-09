@@ -1,5 +1,6 @@
 package com.workflow.task.entity;
 
+import com.workflow.task.dto.WorkflowStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +23,8 @@ public class Task {
     private String name;
     private String description;
     private String assignedTo;
-    private String status; // PENDING, IN_PROGRESS, COMPLETED, FAILED
+    @Enumerated(EnumType.STRING)
+    private WorkflowStatus status;
     private Integer priority;
     private LocalDateTime dueDate;
     private LocalDateTime createdDate;
@@ -31,6 +33,6 @@ public class Task {
     @PrePersist
     protected void onCreate() {
         createdDate = LocalDateTime.now();
-        status = "PENDING";
+        status = WorkflowStatus.PENDING;
     }
 }

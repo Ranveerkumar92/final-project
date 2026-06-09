@@ -1,6 +1,7 @@
 package com.workflow.task.service;
 
 import com.workflow.task.dto.TaskDTO;
+import com.workflow.task.dto.WorkflowStatus;
 import com.workflow.task.entity.Task;
 import com.workflow.task.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +60,7 @@ public class TaskService {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
         
-        task.setStatus(status);
+        task.setStatus(WorkflowStatus.valueOf(status));
         if ("COMPLETED".equals(status)) {
             task.setCompletedDate(LocalDateTime.now());
         }

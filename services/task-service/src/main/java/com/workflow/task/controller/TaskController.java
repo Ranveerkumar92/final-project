@@ -5,6 +5,7 @@ import com.workflow.task.dto.TaskDTO;
 import com.workflow.task.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ public class TaskController {
 
     @PostMapping
     @Operation(summary = "Create a new task")
-    public ResponseEntity<ApiResponse<TaskDTO>> createTask(@RequestBody TaskDTO dto) {
+    public ResponseEntity<ApiResponse<TaskDTO>> createTask(@Valid @RequestBody TaskDTO dto) {
         log.info("Creating task: {}", dto.getName());
         TaskDTO created = taskService.createTask(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
