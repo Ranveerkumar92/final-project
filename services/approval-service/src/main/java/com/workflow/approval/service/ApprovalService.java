@@ -1,6 +1,7 @@
 package com.workflow.approval.service;
 
 import com.workflow.approval.dto.ApprovalDTO;
+import com.workflow.approval.dto.ApprovalStatus;
 import com.workflow.approval.entity.Approval;
 import com.workflow.approval.repository.ApprovalRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class ApprovalService {
         Approval approval = Approval.builder()
                 .workflowInstanceId(dto.getWorkflowInstanceId())
                 .approver(userId)
-                .status(dto.getStatus())
+                .status(ApprovalStatus.valueOf(dto.getStatus().name()))
                 .comments(dto.getComments())
                 .approvalDate(LocalDateTime.now())
                 .build();
@@ -52,7 +53,7 @@ public class ApprovalService {
     public List<ApprovalDTO> getPendingApprovalsForUser(String userId) {
         log.info("Fetching pending approvals for user: {}", userId);
         return approvalRepository.findByApprover(userId).stream()
-                .filter(a -> "PENDING".equals(a.getStatus()))
+                .filter(a -> "PENDING".equalsIgnoreCase(a.getStatus().name()))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -69,7 +70,7 @@ public class ApprovalService {
                 .id(approval.getId())
                 .workflowInstanceId(approval.getWorkflowInstanceId())
                 .approver(approval.getApprover())
-                .status(approval.getStatus())
+                .status(ApprovalStatus.valueOf(approval.getStatus().name()))
                 .comments(approval.getComments())
                 .build();
     }

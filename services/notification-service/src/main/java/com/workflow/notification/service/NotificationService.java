@@ -1,10 +1,13 @@
 package com.workflow.notification.service;
 
 import com.workflow.notification.dto.NotificationDTO;
+import com.workflow.notification.dto.NotificationStatus;
+import com.workflow.notification.dto.NotificationType;
 import com.workflow.notification.entity.Notification;
 import com.workflow.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -21,6 +24,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotificationService {
 
+    @Value("${notification.sender}")
+    private String sender;
+
+    @Value("${notification.recipientId}")
+    private String recipientId;
+
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
 
@@ -28,28 +37,28 @@ public class NotificationService {
     public void handleWorkflowEvents(String eventData) {
         log.info("Received workflow event: {}", eventData);
         // Process event and send notification
-        sendNotification("system@workflow.com", "Workflow Event", eventData, "IN_APP");
+        sendNotification(recipientId, "Workflow Event", eventData, "IN_APP");
     }
 
     public NotificationDTO sendNotification(String recipientId, String subject, String message, String type) {
         log.info("Sending notification to: {}", recipientId);
-        
+
         Notification notification = Notification.builder()
                 .recipientId(recipientId)
                 .subject(subject)
                 .message(message)
-                .type(type)
+                .type(NotificationType.valueOf(type.toUpperCase()))
                 .build();
 
         try {
-            if ("EMAIL".equals(type)) {
+            if ("EMAIL".equalsIgnoreCase(type)) {
                 sendEmail(recipientId, subject, message);
             }
-            notification.setStatus("SENT");
+            notification.setStatus(NotificationStatus.SENT);
             notification.setSentDate(LocalDateTime.now());
         } catch (Exception e) {
             log.error("Failed to send notification", e);
-            notification.setStatus("FAILED");
+            notification.setStatus(NotificationStatus.FAILED);
             notification.setErrorDetails(e.getMessage());
         }
 
@@ -71,7 +80,7 @@ public class NotificationService {
             mailMessage.setTo(recipient);
             mailMessage.setSubject(subject);
             mailMessage.setText(message);
-            mailMessage.setFrom("noreply@workflow-builder.com");
+            mailMessage.setFrom(sender);
             mailSender.send(mailMessage);
         } catch (Exception e) {
             log.error("Error sending email", e);
@@ -85,8 +94,8 @@ public class NotificationService {
                 .recipientId(notification.getRecipientId())
                 .subject(notification.getSubject())
                 .message(notification.getMessage())
-                .type(notification.getType())
-                .status(notification.getStatus())
+                .type(notification.getType().name())
+                .status(notification.getStatus().name())
                 .build();
     }
 }

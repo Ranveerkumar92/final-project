@@ -54,3 +54,7 @@ logging:
     com.workflow: DEBUG
   file:
     name: logs/notification-service.log
+
+notification:
+  sender: noreply@workflow-builder.com
+  recipientId: system@workflow.com
